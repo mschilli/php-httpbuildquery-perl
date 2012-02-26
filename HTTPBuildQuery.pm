@@ -11,7 +11,7 @@ use URI::Escape;
 
 require Exporter;
 our @ISA = qw(Exporter);
-our @EXPORT_OK = qw(http_build_query);
+our @EXPORT_OK = qw(http_build_query http_build_query_utf8);
 
 our $VERSION = "0.03";
 
@@ -20,22 +20,40 @@ sub http_build_query {
 ###########################################
     my($data, $prefix, $separator) = @_;
 
-    $separator = '&' unless defined $separator;
+    return http_build_query_iso($data, $prefix, $separator);
+}
 
-    return serialize($data, $prefix, $separator);
+###########################################
+sub http_build_query_utf8 {
+###########################################
+    my($data, $prefix, $separator) = @_;
+
+    return serialize($data, $prefix, $separator, 
+                     \&URI::Escape::uri_escape_utf8);
+}
+
+###########################################
+sub http_build_query_iso {
+###########################################
+    my($data, $prefix, $separator) = @_;
+
+    return serialize($data, $prefix, $separator, 
+                     \&URI::Escape::uri_escape);
 }
 
 ###########################################
 sub serialize {
 ###########################################
-    my($data, $prefix, $separator, $sofar) = @_;
+    my($data, $prefix, $separator, $escaper, $sofar) = @_;
+
+    $separator = '&' unless defined $separator;
 
     if( ref($data) eq "HASH" ) {
-        return hash_serialize($data, $prefix, $separator, $sofar);
+        return hash_serialize($data, $prefix, $separator, $escaper, $sofar);
     } elsif( ref($data) eq "ARRAY" ) {
-        return array_serialize($data, $prefix, $separator, $sofar);
+        return array_serialize($data, $prefix, $separator, $escaper, $sofar);
     } elsif( ref($data) eq "" ) {
-        return scalar_serialize($data, $prefix, $separator, $sofar);
+        return scalar_serialize($data, $prefix, $separator, $escaper, $sofar);
     } else {
         die "Data type ", ref($data), " not (yet) implemented.";
     }
@@ -44,7 +62,7 @@ sub serialize {
 ###########################################
 sub hash_serialize {
 ###########################################
-    my($data, $prefix, $separator, $sofar) = @_;
+    my($data, $prefix, $separator, $escaper, $sofar) = @_;
 
     my $result = "";
 
@@ -52,14 +70,15 @@ sub hash_serialize {
 
         my $newsofar = 
             defined $sofar ? 
-              ($sofar . "%5B" . uri_escape($key) . "%5D") :
-              uri_escape($key);
+              ($sofar . "%5B" . $escaper->($key) . "%5D") :
+              $escaper->($key);
 
         $result .= $separator if length $result;
         $result .= serialize( 
                      $data->{$key},
                      $prefix,
                      $separator,
+                     $escaper,
                      $newsofar,
                    );
     }
@@ -69,7 +88,7 @@ sub hash_serialize {
 ###########################################
 sub array_serialize {
 ###########################################
-    my($data, $prefix, $separator, $sofar) = @_;
+    my($data, $prefix, $separator, $escaper, $sofar) = @_;
 
     my $result = "";
     my $idx    = 0;
@@ -88,6 +107,7 @@ sub array_serialize {
                      $element,
                      $prefix,
                      $separator,
+                     $escaper,
                      $newsofar,
                    );
         $idx++;
@@ -98,9 +118,9 @@ sub array_serialize {
 ###########################################
 sub scalar_serialize {
 ###########################################
-    my($data, $prefix, $separator, $sofar) = @_;
+    my($data, $prefix, $separator, $escaper, $sofar) = @_;
 
-    return "$sofar=" . uri_escape($data);
+    return "$sofar=" . $escaper->($data);
 }
 
 1;
@@ -115,12 +135,13 @@ PHP::HTTPBuildQuery - Data structures become form-encoded query strings
 
     use PHP::HTTPBuildQuery qw(http_build_query);
 
-    my $query = http_build_query( { foo => { 
-                                      bar   => "baz", 
-                                      quick => { "quack" => "schmack" },
-                                    },
-                                  },
-                                );
+    my $query = http_build_query( 
+        { foo => { 
+              bar => "baz", 
+                  quick => { "quack" => "schmack" },
+              },
+        },
+    );
 
     # Query: "foo%5Bbar%5D=baz&foo%5Bquick%5D%5Bquack%5D=schmack"
 
@@ -131,6 +152,10 @@ PHP::HTTPBuildQuery - Data structures become form-encoded query strings
 PHP::HTTPBuildQuery implements PHP's C<http_build_query> function in
 Perl. It is used to form-encode Perl data structures in URLs, so that
 PHP can read them on the receiving end.
+
+New with version 0.04 comes C<http_build_query_utf8> which has an
+identical syntax but deals with utf8 data instead. See the GOTCHAS section 
+below for details.
 
 C<http_build_query> accepts one mandatory and two optional parameters: 
 
@@ -191,7 +216,13 @@ used to separate the fields in the encoded string.
 
 =over 4
 
-=item *
+=item B<UTF8 Characters>
+
+The C<uri_escape()> function used in C<http_build_query> won't encode
+utf8 characters. If your data is utf8 encoded, use C<http_build_query_utf8>
+instead.
+
+=item B<Hash Element Order>
 
 Perl hashes have no defined order, so if you encode something like
 C<{ foo => "bar", baz => "quack" }>, don't be surprised if you get
@@ -199,7 +230,7 @@ the entries in a different order:
 
     # Query: "baz=quack&foo=bar"
 
-=item *
+=item B<Frankenstein Arrays>
 
 PHP's Frankenstein arrays handle numeric indexing and hash-like lookups
 transparently. For example, you could have a data structure like
@@ -235,7 +266,7 @@ arrays for numerically indexed containers, so you can't mix and match,
 and there's no way to define a data structure to print out the query
 string above.
 
-=item *
+=item B<Special Characters>
 
 C<http_build_query> creates a PHP-specific encoding format which
 can't handle ']' or '[' characters in its keys (they're ok in hash
@@ -244,19 +275,6 @@ will just generate form strings that won't be decodable afterwards. Make
 sure to filter your data before passing it to C<http_build_query()>.
 
 =back
-
-=head1 CHANGES
-
-    0.03  2008/10/14
-        (ms) Added copyright notice
-
-    0.02  2008/10/03
-        (ms) Changed API to be more PHP-like after consulting with 
-             Sara Golemon.
-        (ms) Added arrays
-    
-    0.01  2008/10/03
-        (ms) Where it all began.
 
 =head1 THANKS
 

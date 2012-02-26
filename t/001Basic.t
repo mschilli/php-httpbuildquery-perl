@@ -8,9 +8,11 @@
 use warnings;
 use strict;
 
-use PHP::HTTPBuildQuery qw(http_build_query);
-use Test::More qw(no_plan);
+use PHP::HTTPBuildQuery qw(http_build_query http_build_query_utf8);
+use Test::More;
 use URI::Escape;
+
+plan tests => 12;
 
 is( http_build_query( 
       { foo => { 
@@ -73,6 +75,13 @@ is( http_build_query( { a => "b", c => { d => "e" } }, "foo" ),
     cobble("a=b", "c[d]=e", ['a', 'c']),
     "nested struct"
   );
+
+use utf8;
+
+is( http_build_query_utf8( ["\x{2013}foo", 'bar'] ),
+    "0=%E2%80%93foo&1=bar",
+    "utf8 char in array"
+);
 
 ###########################################
 sub cobble {
