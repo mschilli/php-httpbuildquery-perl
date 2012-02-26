@@ -13,7 +13,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(http_build_query http_build_query_utf8);
 
-our $VERSION = "0.03";
+our $VERSION = "0.04";
 
 ###########################################
 sub http_build_query {
@@ -285,7 +285,7 @@ Sara Golemon, Rasmus Lerdorf, Evan Miller.
 
 COPYRIGHT & LICENSE
 
-Copyright (c) 2008 Yahoo! Inc. All rights reserved. The copyrights to the 
+Copyright (c) 2008-2012 Yahoo! Inc. All rights reserved. The copyrights to the 
 contents of this file are licensed under the Perl Artistic License 
 (ver. 15 Aug 1997)
 
