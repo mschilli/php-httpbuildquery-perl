@@ -1,3 +1,6 @@
+0.05 (not yet released) 
+    (ms) Requiring perl-5.8 to avoid utf8 problems with 5.6.
+
 0.04 (02/26/2012)
     (ms) [rt.cpan.org #74784] Added http_build_query_utf8() to deal with 
          utf8 encoded input data, using URI::Escape's uri_escape_utf8()

@@ -13,7 +13,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(http_build_query http_build_query_utf8);
 
-our $VERSION = "0.04";
+our $VERSION = "0.05";
 
 ###########################################
 sub http_build_query {

@@ -4,6 +4,8 @@
 # copyrights to the contents of this file are licensed under the Perl
 # Artistic License (ver. 15 Aug 1997)
 ######################################################################
+  # 5.6 has broken utf8 support, requiring 5.8
+use 5.008;
 use ExtUtils::MakeMaker;
 
 my $meta_merge = {
