@@ -120,7 +120,10 @@ sub scalar_serialize {
 ###########################################
     my($data, $prefix, $separator, $escaper, $sofar) = @_;
 
-    return "$sofar=" . $escaper->($data);
+    my $escaped_data = defined $data ? $escaper->($data) : '';
+    my $new_sofar    = defined $sofar ? $sofar : '';
+
+    return "$new_sofar=$escaped_data";
 }
 
 1;
