@@ -12,7 +12,7 @@ use PHP::HTTPBuildQuery qw(http_build_query http_build_query_utf8);
 use Test::More;
 use URI::Escape;
 
-plan tests => 12;
+plan tests => 14;
 
 is( http_build_query( 
       { foo => { 
@@ -74,6 +74,16 @@ is( http_build_query( { "foo" => "ba%r" } ),
 is( http_build_query( { a => "b", c => { d => "e" } }, "foo" ),
     cobble("a=b", "c[d]=e", ['a', 'c']),
     "nested struct"
+  );
+
+is( http_build_query( { a => { 'b' => undef }, c => undef } ),
+    'c=&a%5Bb%5D=',
+    'undefined scalars'
+  );
+
+is( http_build_query( 'id' ),
+    '=id',
+    'undefined sofar'
   );
 
 use utf8;
