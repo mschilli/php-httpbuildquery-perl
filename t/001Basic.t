@@ -21,7 +21,8 @@ is( http_build_query(
         },
       },
     ),
-    cobble("foo[bar]=baz", "foo[quick][quack]=schmack"),
+    cobble("foo[bar]=baz", "foo[quick][quack]=schmack", 
+       ['bar', 'quick']),
     "pod"
 );
 
