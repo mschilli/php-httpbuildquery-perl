@@ -11,7 +11,7 @@ use ExtUtils::MakeMaker;
 my $meta_merge = {
     META_MERGE => {
         resources => {
-            repository  => 'http://github.com/mschilli/php-httpbuildquery-perl-master.git',
+            repository  => 'http://github.com/mschilli/php-httpbuildquery-perl',
         },
     }
 };
@@ -22,6 +22,7 @@ WriteMakefile(
     'PREREQ_PM'    => {
          "URI::Escape" => 0,
     }, # e.g., Module::Name => 1.1
+    'LICENSE' => 'artistic',
     $ExtUtils::MakeMaker::VERSION >= 6.50 ? (%$meta_merge) : (),
     ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM => 'HTTPBuildQuery.pm',
