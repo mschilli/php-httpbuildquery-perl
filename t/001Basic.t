@@ -12,6 +12,8 @@ use PHP::HTTPBuildQuery qw(http_build_query http_build_query_utf8);
 use Test::More;
 use URI::Escape;
 
+$PHP::HTTPBuildQuery::SORTED_HASH_KEYS = 1;
+
 plan tests => 14;
 
 is( http_build_query( 
@@ -76,7 +78,7 @@ is( http_build_query( { a => "b", c => { d => "e" } }, "foo" ),
   );
 
 is( http_build_query( { a => { 'b' => undef }, c => undef } ),
-    'a%5Bb%5D=&c=',
+    cobble("a[b]=", "c="),
     'undefined scalars'
   );
 
