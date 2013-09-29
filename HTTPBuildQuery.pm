@@ -66,7 +66,7 @@ sub hash_serialize {
 
     my $result = "";
 
-    for my $key (keys %$data) {
+    for my $key (sort keys %$data) {
 
         my $newsofar = 
             defined $sofar ? 

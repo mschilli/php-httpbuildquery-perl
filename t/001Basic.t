@@ -21,8 +21,7 @@ is( http_build_query(
         },
       },
     ),
-    cobble("foo[bar]=baz", "foo[quick][quack]=schmack", 
-       ['bar', 'quick']),
+    cobble("foo[bar]=baz", "foo[quick][quack]=schmack"),
     "pod"
 );
 
@@ -52,13 +51,12 @@ is( http_build_query( { foo => { "bar" => { quick => "quack" }}} ),
   );
 
 is( http_build_query( { foo => "bar", "baz" => "quack" } ),
-    cobble("foo=bar", "baz=quack", ['foo', 'baz']),
+    cobble("baz=quack", "foo=bar"),
     "two elements"
   );
 
 is( http_build_query( { foo => "bar", "baz" => "quack", "me" => "you" } ),
-    cobble("foo=bar", "baz=quack", "me=you",
-           ['foo', 'baz', 'me']),
+    cobble("baz=quack", "foo=bar", "me=you"),
     "three elements"
   );
 
@@ -73,12 +71,12 @@ is( http_build_query( { "foo" => "ba%r" } ),
   );
 
 is( http_build_query( { a => "b", c => { d => "e" } }, "foo" ),
-    cobble("a=b", "c[d]=e", ['a', 'c']),
+    cobble("a=b", "c[d]=e"),
     "nested struct"
   );
 
 is( http_build_query( { a => { 'b' => undef }, c => undef } ),
-    'c=&a%5Bb%5D=',
+    'a%5Bb%5D=&c=',
     'undefined scalars'
   );
 
@@ -99,32 +97,7 @@ sub cobble {
 ###########################################
     my(@fields) = @_;
 
-    my $sort_order;
-
-    if(ref ( $fields[-1] ) eq "ARRAY" ) {
-        $sort_order = pop @fields;
-    }
-
-    @fields = hashsort(\@fields, $sort_order) if defined $sort_order;
-
     return join '&', map { escape_brackets( $_ ) } @fields;
-}
-
-###########################################
-sub hashsort {
-###########################################
-    my($array, $hash_keys) = @_;
-
-    my $i=0;
-    my %order_hash = map { $_ => $i++ } @$hash_keys;
-
-    my @copy = ();
-
-    for my $key (keys %order_hash) {
-        push @copy, $array->[ $order_hash{ $key } ];
-    }
-
-    return @copy; 
 }
 
 ###########################################
