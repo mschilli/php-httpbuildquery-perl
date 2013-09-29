@@ -14,6 +14,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(http_build_query http_build_query_utf8);
 
 our $VERSION = "0.06";
+our $SORTED_HASH_KEYS = 0; # for predictable test results only
 
 ###########################################
 sub http_build_query {
@@ -66,7 +67,9 @@ sub hash_serialize {
 
     my $result = "";
 
-    for my $key (keys %$data) {
+    for my $key ($SORTED_HASH_KEYS ? 
+                  ( sort keys %$data ) :
+                  (      keys %$data ) ) {
 
         my $newsofar = 
             defined $sofar ? 
