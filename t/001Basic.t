@@ -12,6 +12,11 @@ use PHP::HTTPBuildQuery qw(http_build_query http_build_query_utf8);
 use Test::More;
 use URI::Escape;
 
+ # We rely on keys() returning the keys of a hash in a reproducable order
+ # within the process, see http://perlmonks.org/?node_id=1056280 and
+ # https://github.com/mschilli/php-httpbuildquery-perl/pull/3 for details.
+$ENV{ PERL_PERTURB_KEYS } = "DETERMINISTIC";
+
 plan tests => 14;
 
 is( http_build_query( 
@@ -78,7 +83,7 @@ is( http_build_query( { a => "b", c => { d => "e" } }, "foo" ),
   );
 
 is( http_build_query( { a => { 'b' => undef }, c => undef } ),
-    'c=&a%5Bb%5D=',
+    cobble("a[b]=", "c=", ['a', 'c']),
     'undefined scalars'
   );
 
