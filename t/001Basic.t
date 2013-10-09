@@ -15,7 +15,12 @@ use URI::Escape;
  # We rely on keys() returning the keys of a hash in a reproducable order
  # within the process, see http://perlmonks.org/?node_id=1056280 and
  # https://github.com/mschilli/php-httpbuildquery-perl/pull/3 for details.
-$ENV{ PERL_PERTURB_KEYS } = "DETERMINISTIC";
+#$ENV{ PERL_PERTURB_KEYS } = "DETERMINISTIC";
+
+unless (defined $ENV{PERL_PERTURB_KEYS} and $ENV{PERL_PERTURB_KEYS} == 0
+    and defined $ENV{PERL_HASH_SEED} and $ENV{PERL_HASH_SEED} == 1) {
+    plan skip_all => 'PERL_PERTURB_KEYS=0 and PERL_HASH_SEED=1 has to be in order to have predictable Hashes';
+}
 
 plan tests => 14;
 
