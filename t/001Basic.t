@@ -15,21 +15,41 @@ use URI::Escape;
  # We rely on keys() returning the keys of a hash in a reproducable order
  # within the process, see http://perlmonks.org/?node_id=1056280 and
  # https://github.com/mschilli/php-httpbuildquery-perl/pull/3 for details.
-$ENV{ PERL_PERTURB_KEYS } = "DETERMINISTIC";
+#$ENV{ PERL_PERTURB_KEYS } = "DETERMINISTIC";
+
+# make test
+# prove -bv t/001Basic.t
+#    will skip the problematic tests on perl 5.18 and newer.
+# PERL_PERTURB_KEYS=0 PERL_HASH_SEED=1 make test
+# PERL_PERTURB_KEYS=0 PERL_HASH_SEED=1 prove -bv t/001Basic.t
+#    will run the problematic tests too
+
+my $skip_hash = 1;
+if ($] < 5.018000 or
+    (defined $ENV{PERL_PERTURB_KEYS}
+	and $ENV{PERL_PERTURB_KEYS} == 0
+    and defined $ENV{PERL_HASH_SEED}
+    and $ENV{PERL_HASH_SEED} == 1)) {
+	$skip_hash = 0;
+}
+my $reason = 'PERL_PERTURB_KEYS=0 and PERL_HASH_SEED=1 has to be in order to have predictable Hashes';
 
 plan tests => 14;
 
-is( http_build_query( 
-      { foo => { 
-          bar   => "baz", 
-          quick => { "quack" => "schmack" },
+SKIP: {
+  skip $reason, 1 if $skip_hash;
+  is( http_build_query( 
+        { foo => { 
+            bar   => "baz", 
+            quick => { "quack" => "schmack" },
+          },
         },
-      },
-    ),
-    cobble("foo[bar]=baz", "foo[quick][quack]=schmack", 
-       ['bar', 'quick']),
-    "pod"
-);
+      ),
+      cobble("foo[bar]=baz", "foo[quick][quack]=schmack", 
+         ['bar', 'quick']),
+      "pod"
+  );
+}
 
 is( http_build_query( ['foo', 'bar'], "name" ),
     "name_0=foo&name_1=bar",
@@ -56,16 +76,19 @@ is( http_build_query( { foo => { "bar" => { quick => "quack" }}} ),
     "nested hash"
   );
 
-is( http_build_query( { foo => "bar", "baz" => "quack" } ),
-    cobble("foo=bar", "baz=quack", ['foo', 'baz']),
-    "two elements"
-  );
+SKIP: {
+  skip $reason, 2 if $skip_hash;
+  is( http_build_query( { foo => "bar", "baz" => "quack" } ),
+      cobble("foo=bar", "baz=quack", ['foo', 'baz']),
+      "two elements"
+    );
 
-is( http_build_query( { foo => "bar", "baz" => "quack", "me" => "you" } ),
-    cobble("foo=bar", "baz=quack", "me=you",
-           ['foo', 'baz', 'me']),
-    "three elements"
-  );
+  is( http_build_query( { foo => "bar", "baz" => "quack", "me" => "you" } ),
+      cobble("foo=bar", "baz=quack", "me=you",
+             ['foo', 'baz', 'me']),
+      "three elements"
+    );
+}
 
 is( http_build_query( { "foo%" => "bar" } ),
     "foo%25=bar",
@@ -77,15 +100,18 @@ is( http_build_query( { "foo" => "ba%r" } ),
     "urlesc in value"
   );
 
-is( http_build_query( { a => "b", c => { d => "e" } }, "foo" ),
-    cobble("a=b", "c[d]=e", ['a', 'c']),
-    "nested struct"
-  );
+SKIP: {
+  skip $reason, 2 if $skip_hash;
+  is( http_build_query( { a => "b", c => { d => "e" } }, "foo" ),
+      cobble("a=b", "c[d]=e", ['a', 'c']),
+      "nested struct"
+    );
 
-is( http_build_query( { a => { 'b' => undef }, c => undef } ),
-    cobble("a[b]=", "c=", ['a', 'c']),
-    'undefined scalars'
-  );
+  is( http_build_query( { a => { 'b' => undef }, c => undef } ),
+      cobble("a[b]=", "c=", ['a', 'c']),
+      'undefined scalars'
+    );
+}
 
 is( http_build_query( 'id' ),
     '=id',
