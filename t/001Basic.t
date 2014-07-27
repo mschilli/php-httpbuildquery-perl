@@ -15,7 +15,19 @@ use URI::Escape;
  # We rely on keys() returning the keys of a hash in a reproducable order
  # within the process, see http://perlmonks.org/?node_id=1056280 and
  # https://github.com/mschilli/php-httpbuildquery-perl/pull/3 for details.
-$ENV{ PERL_PERTURB_KEYS } = "DETERMINISTIC";
+
+ # According to https://rt.cpan.org/Public/Bug/Display.html?id=89278 we need
+ # to set the environment variables
+ #   PERL_HASH_SEED:    "0"
+ #   PERL_PERTURB_KEYS: "NO"
+ # and do that *before* the interpreter starts, so let's do that 
+ # here and re-invoke ourselves.
+if( !exists $ENV{ PERL_PERTURB_KEYS } ) {
+    # warn "Re-invoking to set anti-hash-jumbling variables";
+    $ENV{ PERL_PERTURB_KEYS } = "NO";
+    $ENV{ PERL_HASH_SEED }    = "0";
+    exec $^X, $0, @ARGV or die;
+}
 
 plan tests => 14;
 

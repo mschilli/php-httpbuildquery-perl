@@ -1,3 +1,9 @@
+0.08 (07/26/2014)
+    (ms) [rt.cpan.org #89278] Setting PERL_HASH_SEED=0 and 
+         PERL_PERTURB_KEYS=NO before the interpreter starts (via
+         re-invoking the test suite) to comply with required
+         anti-hash-tumbling settings.
+
 0.07 (09/30/2013) 
     (ms) Fixed test suite for perl-5.17 and its non-deterministic keys.
 
