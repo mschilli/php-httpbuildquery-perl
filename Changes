@@ -1,3 +1,6 @@
+0.09 (11/15/2015)
+    (ms) [rt.cpan.org #108874] removed MYMETA* files from distro.
+
 0.08 (07/26/2014)
     (ms) [rt.cpan.org #89278] Setting PERL_HASH_SEED=0 and 
          PERL_PERTURB_KEYS=NO before the interpreter starts (via
